@@ -18,6 +18,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
@@ -94,14 +95,39 @@ static void* myInit(struct fuse_conn_info* conn){
     
     int i = 0;
     FILE* tempFilePtr;
+    char* superBlockPath = "/home/sean/fusedata/fusedata.0";
     //char* usr = getenv("USER");
     //printf("USER: %s", usr);
     
-    if(tempFilePtr == fopen("/home/sean/fusedata/fusedata.0", "r")){
-        fclose(tempFilePtr);
+    struct stat tmp;
+    int check = stat(superBlockPath, &tmp);
+    
+    
+    if (check == 0)
+        i++;
+    
+//    
+//    if(tempFilePtr == fopen(superBlockPath, "r")){
+//        fclose(tempFilePtr);
+//        i++;
+//    }
+    
+    
+    // Creating SuperBlock if it does not exist
+    
+    if(i == 0){
+        FILE* superBlock = fopen(superBlockPath, "w+");
+        fprintf(superBlock, "{\n");
+        fprintf(superBlock, "creationTime: %ld\n", time(NULL));
+        fprintf(superBlock, "mounted: %d\n", 1);
+        fprintf(superBlock, "devID: %d\n", 20);
+        fprintf(superBlock, "freeStart: %d\n", 1);
+        fprintf(superBlock, "freeEnd: %d\n", 25);
+        fprintf(superBlock, "root: %d\n", 26);
+        fprintf(superBlock, "maxBlocks: %d\n", 10000);
+        fclose(superBlock);
         i++;
     }
-    
     
     
     char* lotsOfZeros = (char*) malloc(MAX_BLOCK_SIZE);
@@ -115,8 +141,8 @@ static void* myInit(struct fuse_conn_info* conn){
         fwrite(lotsOfZeros, MAX_BLOCK_SIZE, 1, blockFile);
         //fprintf(blockFile, "%p", lotsOfZeros);
         fclose(blockFile);
-        
     }
+    
     void* temp2 = malloc(1);
     free(lotsOfZeros);
     //free(blockFile);
