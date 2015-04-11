@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
+#define returnData ((struct rtdata_state *) fuse_get_context()->private_data)
 
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
@@ -134,16 +135,24 @@ static void* myInit(struct fuse_conn_info* conn){
     memset(lotsOfZeros, '0', MAX_BLOCK_SIZE);
     //    puts(fileName);
     
-    for (i; i<MAX_NUMBER_BLOCKS; i++){
-        //char* stdBlockSize = malloc(MAX_BLOCK_SIZE);
-        sprintf(fileName, "/home/sean/fusedata/fusedata.%d", i);
-        FILE* blockFile = fopen( fileName, "w+");
-        fwrite(lotsOfZeros, MAX_BLOCK_SIZE, 1, blockFile);
-        //fprintf(blockFile, "%p", lotsOfZeros);
-        fclose(blockFile);
+    //Check to see if the files have been created, and if so, do not create the 10K
+    
+    check = stat("/home/sean/fusedata/fusedata.1", &tmp);
+    int filesExist = 0;
+    if (check == 0)
+        filesExist = 1;
+    
+    if (filesExist == 0){ //If the files exist, do not create 10K files again
+        for (i; i<MAX_NUMBER_BLOCKS; i++){
+            //char* stdBlockSize = malloc(MAX_BLOCK_SIZE);
+            sprintf(fileName, "/home/sean/fusedata/fusedata.%d", i);
+            FILE* blockFile = fopen( fileName, "w+");
+            fwrite(lotsOfZeros, MAX_BLOCK_SIZE, 1, blockFile);
+            //fprintf(blockFile, "%p", lotsOfZeros);
+            fclose(blockFile);
+        }
     }
     
-    void* temp2 = malloc(1);
     free(lotsOfZeros);
     //free(blockFile);
     //free(mode);
@@ -151,7 +160,7 @@ static void* myInit(struct fuse_conn_info* conn){
     //free(stdBlockSize);
     //free(blockFile);
     
-    return temp2;
+    return returnData;
     
     
 }
