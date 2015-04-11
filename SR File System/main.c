@@ -1,10 +1,3 @@
-//
-//  main.c
-//  SR File System
-//
-//  Created by Sean Ramzan on 3/28/15.
-//  Copyright (c) 2015 Sean Ramzan. All rights reserved.
-//
 
 #include <stdio.h>
 
@@ -32,7 +25,7 @@ static const int MAX_NUMBER_BLOCKS = 10000;
 static const int MAX_BLOCK_SIZE = 4096;
 
 
-/*
+
 static int hello_getattr(const char *path, struct stat *stbuf)
 {
     int res = 0;
@@ -84,43 +77,53 @@ static int hello_read(const char *path, char *buf, size_t size, off_t offset,
     size_t len;
     return len;
 }
- */
 
-static void* myInit(){
+
+static void* myInit(struct fuse_conn_info* conn){
     
-    // TODO - Check to see if the 10K blocks have been created
+    // TODO - Check to see if the 10K blocks have been created - Done
     // TODO - Check number of blocks that exist already
     
-    //char fsPath[]  = {"/myFileSystem/blocks/"};
-//    char* fileName = {"fusedata."};
+    
+    //char fsPath[]  = {"/home/sean/Desktop/fileSystem/blocks"};
+    //    char* fileName = {"fusedata."};
     char fileName[20];
-    int fileNumber = 0;
+    //int fileNumber = 0;
     //char* mode = "w+";
-    sprintf(fileName, "filedata.%d", fileNumber);
+    //sprintf(fileName, "%sfiledata.%d", fsPath,fileNumber);
+    
+    int i = 0;
+    FILE* tempFilePtr;
+    //char* usr = getenv("USER");
+    //printf("USER: %s", usr);
+    
+    if(tempFilePtr == fopen("/home/sean/fusedata/fusedata.0", "r")){
+        fclose(tempFilePtr);
+        i++;
+    }
+    
+    
+    
     char* lotsOfZeros = (char*) malloc(MAX_BLOCK_SIZE);
     memset(lotsOfZeros, '0', MAX_BLOCK_SIZE);
-//    puts(fileName);
-    //DELETE LATER
-    char* name;
-    name = (char*) malloc(256*4*4);
-    char* numDigits = malloc(100);
-    char* letter_ch = (char*) malloc(strlen(numDigits));
+    //    puts(fileName);
     
-    for (int i = 0; i<3; i++){
+    for (i; i<MAX_NUMBER_BLOCKS; i++){
         //char* stdBlockSize = malloc(MAX_BLOCK_SIZE);
-        //sprintf(fileName, "filedata.%d", fileNumber);
-    
-        strcpy(name, fuse_get_context()->private_data);
-        strcat(name, letter_ch);
+        sprintf(fileName, "/home/sean/fusedata/fusedata.%d", i);
         FILE* blockFile = fopen( fileName, "w+");
         fwrite(lotsOfZeros, MAX_BLOCK_SIZE, 1, blockFile);
         //fprintf(blockFile, "%p", lotsOfZeros);
         fclose(blockFile);
         
     }
-    
-    void* temp2 = malloc(10);
+    void* temp2 = malloc(1);
+    free(lotsOfZeros);
+    //free(blockFile);
+    //free(mode);
     //free(lotsOfZeros);
+    //free(stdBlockSize);
+    //free(blockFile);
     
     return temp2;
     
@@ -128,21 +131,19 @@ static void* myInit(){
 }
 
 
-                  
+
 static struct fuse_operations operationMappings = {
     .init = myInit,
-//    .gettattr = getAttributes,
-//    .readdir =  readDirectory,
-//    .open = openFile,
-//    .read = readFile,
+    .getattr = hello_getattr,
+    .readdir =  hello_readdir,
+    .open = hello_open,
+    .read = hello_read,
     
 };
 
 int main(int argc, char * argv[]) {
     // insert code here...
-    myInit();
-    printf("hello");
-    //char* fullpath = realpath(argv[argc-1], NULL);
-    //return fuse_main(argc, argv, operationMappings, fullpath);
-    return 0;
+    //myInit();
+    char* fullpath = realpath(argv[argc-1], NULL);
+    return fuse_main(argc, argv, &operationMappings, fullpath);
 }
