@@ -107,47 +107,101 @@ static void* myInit(struct fuse_conn_info* conn){
     if (check == 0)
         i++;
     
-//    
-//    if(tempFilePtr == fopen(superBlockPath, "r")){
-//        fclose(tempFilePtr);
-//        i++;
-//    }
+    //
+    //    if(tempFilePtr == fopen(superBlockPath, "r")){
+    //        fclose(tempFilePtr);
+    //        i++;
+    //    }
     
+    char* lotsOfZeros = (char*) malloc(MAX_BLOCK_SIZE);
+    memset(lotsOfZeros, '0', MAX_BLOCK_SIZE);
     
     // Creating SuperBlock if it does not exist
     
+    
     if(i == 0){
-        FILE* superBlock = fopen(superBlockPath, "w+");
-        fprintf(superBlock, "{\n");
-        fprintf(superBlock, "creationTime: %ld\n", time(NULL));
-        fprintf(superBlock, "mounted: %d\n", 1);
-        fprintf(superBlock, "devID: %d\n", 20);
-        fprintf(superBlock, "freeStart: %d\n", 1);
-        fprintf(superBlock, "freeEnd: %d\n", 25);
-        fprintf(superBlock, "root: %d\n", 26);
-        fprintf(superBlock, "maxBlocks: %d\n", 10000);
+        FILE* superB = fopen(superBlockPath, "w+");
+        fwrite(lotsOfZeros, MAX_BLOCK_SIZE, 1, superB);
+        fclose(superB);
+        FILE* superBlock = fopen(superBlockPath, "r+");
+        // fseek(superBlock, 0, SEEK_SET); // Set position to beginning of file
+        
+        fseek(superBlock, 0, SEEK_SET);
+        int z = 0;
+        for (z; z<27; z++)
+            fprintf(superBlock, "%d,", z);
+        
+        
+        char initialSB [100], creation[50], mount[50], devID[50], freeStart[50], freeEnd[50], root[50], maxBlocks[50], bracket[50];
+        strcpy(initialSB,  "{");
+        sprintf(creation,  "creationTime: %ld,", time(NULL));
+        sprintf(mount,     "mounted: %d,", 1);
+        sprintf(devID,     "devID: %d,", 20);
+        sprintf(freeStart, "freeStart: %d,", 1);
+        sprintf(freeEnd,   "freeEnd: %d,", 25);
+        sprintf(root,      "root: %d,", 26);
+        sprintf(maxBlocks, "maxBlocks: %d", 10000);
+        sprintf(bracket,   "}");
+        //char* mount     = ("mounted: %d,", 1);
+        //char* devID     = ("devID: %d,", 20);
+        //char* freeStart = ("freeStart: %d,", 1);
+        //char* freeEnd   = ("freeEnd: %d,", 25);
+        //    char* root      = ("root: %d,", 26);
+        //    char* maxBlocks = ("maxBlocks: %d,", 10000);
+        //    char* bracket   = ("}");
+    
+        strcat(initialSB, creation);
+        strcat(initialSB, mount);
+        strcat(initialSB, devID);
+        strcat(initialSB, freeStart);
+        strcat(initialSB, freeEnd);
+        strcat(initialSB, root);
+        strcat(initialSB, maxBlocks);
+        strcat(initialSB, bracket);
+    
+        fseek(superBlock, 71, SEEK_SET);
+        //fprintf(superBlock,"TEST");
+        fputs(initialSB, superBlock);
+        //fflush(superBlock);
         fclose(superBlock);
         i++;
     }
     
-    
-    char* lotsOfZeros = (char*) malloc(MAX_BLOCK_SIZE);
-    memset(lotsOfZeros, '0', MAX_BLOCK_SIZE);
-    //    puts(fileName);
+    int j = 400;
+    int k = 800;
     
     //Check to see if the files have been created, and if so, do not create the 10K
     
-    check = stat("/home/sean/fusedata/fusedata.1", &tmp);
+    struct stat tmp2;
+    check = stat("/home/sean/fusedata/fusedata.1", &tmp2);
     int filesExist = 0;
     if (check == 0)
         filesExist = 1;
     
     if (filesExist == 0){ //If the files exist, do not create 10K files again
         for (i; i<MAX_NUMBER_BLOCKS; i++){
-            //char* stdBlockSize = malloc(MAX_BLOCK_SIZE);
             sprintf(fileName, "/home/sean/fusedata/fusedata.%d", i);
             FILE* blockFile = fopen( fileName, "w+");
             fwrite(lotsOfZeros, MAX_BLOCK_SIZE, 1, blockFile);
+            
+            if(i == 1){
+                int j = 27;
+                fseek(blockFile, 0, SEEK_SET);
+                for(j; j < 400; j++){
+                    fprintf(blockFile, "%d,", j);
+                }
+            }
+            
+            while (i != 1 && i <= 25){
+                fseek(blockFile, 0, SEEK_SET);
+                
+                int k = j + 400;
+                for(j; j < k; j++){
+                    fprintf(blockFile, "%d,", j);
+                }
+                break;
+            }
+            //char* stdBlockSize = malloc(MAX_BLOCK_SIZE);
             //fprintf(blockFile, "%p", lotsOfZeros);
             fclose(blockFile);
         }
@@ -182,3 +236,4 @@ int main(int argc, char * argv[]) {
     char* fullpath = realpath(argv[argc-1], NULL);
     return fuse_main(argc, argv, &operationMappings, fullpath);
 }
+
